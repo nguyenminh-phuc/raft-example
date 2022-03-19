@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package MiniDns;
+
+message Command {
+    enum Type {
+        Add = 0;
+        Remove = 1;
+    }
+    message A {
+        string address = 1;
+    }
+    message Ns {
+        string name = 1;
+    }
+    message Cname {
+        string name = 1;
+    }
+    message Mx {
+        uint32 priority = 1;
+        string name = 2;
+    }
+    message Aaaa {
+        string address = 1;
+    }
+
+    Type type = 1;
+    string name = 2;
+    uint32 ttl = 3;
+    oneof value {
+        A a = 4;
+        Ns ns = 5;
+        Cname cname = 6;
+        Mx mx = 7;
+        Aaaa aaaa = 8;
+    }
+}
+
+message AppendEntriesRequest {
+    message Entry {
+        Command command = 1;
+        uint64 term = 2;
+    }
+
+    uint64 term = 1;
+    uint64 leaderId = 2;
+    uint64 previousLogIndex = 3;
+    uint64 previousLogTerm = 4;
+    repeated Entry entries = 5;
+    uint64 leaderCommit = 6;
+}
+
+message AppendEntriesResponse {
+    uint64 term = 1;
+    uint64 id = 2;
+    bool success = 3;
+}
+
+message RequestVoteRequest {
+    uint64 term = 1;
+    uint64 candidateId = 2;
+    uint64 lastLogIndex = 3;
+    uint64 lastLogTerm = 4;
+}
+
+message RequestVoteResponse {
+    uint64 term = 1;
+    bool voteGranted = 2;
+}
+
+message CommandRequest {
+    Command command = 1;
+}
+
+message CommandResponse {
+    message EntryAppliedResponse {
+    }
+
+    message NoLeaderResponse {
+    }
+
+    message RedirectToLeaderResponse {
+        string ip = 1;
+        uint32 port = 2;
+    }
+
+    oneof value {
+        EntryAppliedResponse entryAppliedResponse = 1;
+        NoLeaderResponse noLeaderResponse = 2;
+        RedirectToLeaderResponse redirectToLeader = 3;
+    }
+}
+
+message Message {
+    oneof value {
+        AppendEntriesRequest appendEntriesRequest = 1;
+        AppendEntriesResponse appendEntriesResponse = 2;
+        RequestVoteRequest requestVoteRequest = 3;
+        RequestVoteResponse requestVoteResponse = 4;
+
+        CommandRequest commandRequest = 5;
+        CommandResponse commandResponse = 6;
+    }
+}
